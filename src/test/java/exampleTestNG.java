@@ -1,8 +1,5 @@
 import io.github.bonigarcia.wdm.WebDriverManager;
-import org.openqa.selenium.Alert;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -14,7 +11,6 @@ import org.testng.annotations.Test;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 public class exampleTestNG {
     private WebDriver driver;
@@ -28,6 +24,7 @@ public class exampleTestNG {
     By cartNavLink = By.id("cartur");
     By listElements = By.xpath("//table/tbody/tr/td[3]");
     By totalPrice = By.id("totalp");
+
     // ========================================================================
     // CONFIGURATION OF THE NAVIGATOR CHROME TO ENABLE IT
     // ========================================================================
@@ -37,39 +34,47 @@ public class exampleTestNG {
         driver = new ChromeDriver();
         driver.manage().window().maximize();
     }
+
     // ========================================================================
     // AUTOMATED TEST CASES
     // ========================================================================
     @Test
-    public void testCase1() {
+    public void testCase() throws InterruptedException {
         driver.get("https://www.demoblaze.com/");
         // Implicit wait
         // driver.manage().timeouts().implicitlyWait(20, TimeUnit.SECONDS);
         // Explicit wait
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+        // I add the first product to the cart
         wait.until(ExpectedConditions.elementToBeClickable(samsungGalaxyS6Link));
         WebElement samsungGalaxyS6 = driver.findElement(samsungGalaxyS6Link);
         samsungGalaxyS6.click();
         wait.until(ExpectedConditions.elementToBeClickable(addToCartButton));
         WebElement addButton = driver.findElement(addToCartButton);
         addButton.click();
-        driver.manage().timeouts().implicitlyWait(20, TimeUnit.SECONDS);
-        Alert alert = driver.switchTo().alert();
-        alert.accept();
-
+        acceptAlert(driver);
+        // I add the second product to the cart
         driver.findElement(homeNavLink).click();
+        wait.until(ExpectedConditions.elementToBeClickable(nokiaLumia1520Link));
         driver.findElement(nokiaLumia1520Link).click();
-        //wait.until(ExpectedConditions.elementToBeClickable(addToCartButton));
+        wait.until(ExpectedConditions.elementToBeClickable(addToCartButton));
         WebElement addButton2 = driver.findElement(addToCartButton);
         addButton2.click();
-        alert.accept();
-
+        acceptAlert(driver);
+        // I navigate to the cart page
         driver.findElement(cartNavLink).click();
+//        try {
+//            Thread.sleep(2000);
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(e);
+//        }
+        wait.until(ExpectedConditions.elementToBeClickable(totalPrice));
         List<WebElement> pricesList = driver.findElements(listElements);
         int sumTotal = sumList(pricesList);
         int priceFinal = Integer.parseInt(driver.findElement(totalPrice).getText());
         Assert.assertTrue(sumTotal == priceFinal);
     }
+
     // ========================================================================
     // CLOSE THE NAVIGATOR CHROME
     // ========================================================================
@@ -77,25 +82,55 @@ public class exampleTestNG {
     public void closeNavigator() {
         driver.close();
     }
-
-    public int sizeList(List<WebElement> elements){
+    // ========================================================================
+    // METHODS
+    // ========================================================================
+    public int sizeList(List<WebElement> elements) {
         List<String> auxList = new ArrayList<String>();
-        for(WebElement e : elements){
+        for (WebElement e : elements) {
             auxList.add(e.getText());
         }
         return auxList.size() + 1;
     }
 
-    public int sumList(List<WebElement> elements){
+    public int sumList(List<WebElement> elements) {
         int sum = 0;
         List<Integer> auxList = new ArrayList<Integer>();
-        for(WebElement e : elements){
+        for (WebElement e : elements) {
             auxList.add(Integer.parseInt(e.getText()));
         }
-        for (int i: auxList) {
+        for (int i : auxList) {
             sum += i;
         }
         return sum;
+    }
+
+    public boolean isAlertPresent() {
+        boolean presentFlag = false;
+        try {
+            Alert alert = driver.switchTo().alert();
+            presentFlag = true;
+        } catch (NoAlertPresentException ex) {
+            ex.printStackTrace();
+        }
+        return presentFlag;
+    }
+
+    public void acceptAlert(WebDriver driver) throws InterruptedException {
+        int i = 0;
+        while(i++ < 5) {
+            boolean flag = isAlertPresent();
+            if(flag) {
+                driver.switchTo().alert().accept();
+                break;
+            }
+            if(i == 5) {
+                throw new java.lang.Error("Alert isn't display");
+            } else {
+                Thread.sleep(500);
+                continue;
+            }
+        }
     }
 
 }
