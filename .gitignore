@@ -1,0 +1,5 @@
+# Ignore the folder target of the root
+target
+
+# Ignore the folder .idea of the root
+.idea
